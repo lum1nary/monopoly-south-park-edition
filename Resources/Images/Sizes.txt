@@ -1,0 +1,10 @@
+Monitor  5:4 (1280x1024) => 16:9 with borders
+GameZone 1:1 (2048x2048)
+Card     2:3 (512x768)
+Background 16:9 (2560x1440)
+Character 1x1 768x768
+Background in center 1:1 1536x1536
+Chance Cards 2x1 (1024x512)
+
+
+ 
