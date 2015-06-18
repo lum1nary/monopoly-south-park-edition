@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class SetCard : EstateCard 
@@ -8,18 +8,17 @@ public class SetCard : EstateCard
 	public event SetCardAction CurrentPriceChanged;
 
 	public SetCardStatus Status {get; set;}
-
-
-	public void Initialize(string name)
+	
+	public override void Initialize(CardInfo ci, Sprite sp)
 	{
-		gameObject.name = name;
-		CardInfo = GameObject.Find("DataReader").GetComponent<DataReader>().GetCardInfo(gameObject.name);
-		PurchasePrice = CardInfo.PurchasePrice;
-		SiteRentPrice = CardInfo.SitePrice;
-		Title = CardInfo.Title;
-		Position = new Position(CardInfo.Position);
+		base.Initialize(ci, sp);
+		Owner = null;
+		CurrentPrice = CardInfo.PurchasePrice;
 		ChangeStatus(SetCardStatus.Normal);
 	}
+
+
+
 	#region Change Status
 	public void ChangeStatus(SetCardStatus NewStatus)
 	{
@@ -34,8 +33,8 @@ public class SetCard : EstateCard
 	{
 		switch(Status)
 		{
-		case SetCardStatus.Normal:          { CurrentPrice = SiteRentPrice;}break;
-		case SetCardStatus.Doubled:         { CurrentPrice = SiteRentPrice * 2; }break;
+		case SetCardStatus.Normal:          { CurrentPrice = CardInfo.SitePrice;}break;
+		case SetCardStatus.Doubled:         { CurrentPrice = CardInfo.SitePrice * 2; }break;
 		case SetCardStatus.With_1_House:    { CurrentPrice = CardInfo.H1_Price; }break;
 		case SetCardStatus.With_2_Houses:   { CurrentPrice = CardInfo.H2_Price; }break;
 		case SetCardStatus.With_3_Houses:   { CurrentPrice = CardInfo.H3_Price; }break;

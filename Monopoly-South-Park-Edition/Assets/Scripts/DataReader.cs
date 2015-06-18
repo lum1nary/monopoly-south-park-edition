@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class DataReader : MonoBehaviour {
 
 	TextAsset CardsInfo;
+	Sprite [] CardSprites;
 	string[] Data;	
 	// Use this for initialization
 	void Awake () 
@@ -12,18 +13,19 @@ public class DataReader : MonoBehaviour {
 		CardsInfo =  Resources.Load<TextAsset>("Cards");
 		Data = CardsInfo.text.Split('\n');
 		System.Array.Resize<string>(ref Data,Data.Length-1);
-//		CardInfo info = GetCardInfo("Lake Tradicaca");
-//		Debug.Log( info.Title +"\n" +
-//			"Purchase Price:" + info.PurchasePrice.ToString() +"\n" +
-//		    "Lay Price:" + info.LayPrice.ToString() + "\n" +
-//		    "Site Price:" + info.SitePrice.ToString() + "\n" +
-//			"H1 Price:" + info.H1_Price.ToString() + "\n" +
-//			"H2 Price:" + info.H2_Price.ToString() + "\n" +
-//			"H3 Price:" + info.H3_Price.ToString() + "\n" +
-//			"H4 Price:" + info.H4_Price.ToString() + "\n" +
-//		    "Hotel Price:" + info.Hotel_Price.ToString() + "\n" +
-//		    "Group:" + info.Group.ToString()
-//		          );
+		CardSprites = Resources.LoadAll<Sprite>("");
+	}
+
+
+
+	public Sprite GetSpriteByPosition(int pos)
+	{
+		for (int i = 0; i < CardSprites.Length; i++) 
+		{
+			if(int.Parse(CardSprites[i].name) == pos)
+				return CardSprites[i];
+		}
+		return null;
 	}
 	#region Get Group By Name
 	public Group GetGroupByName(string Name)

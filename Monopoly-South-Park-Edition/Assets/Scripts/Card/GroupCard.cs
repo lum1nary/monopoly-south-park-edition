@@ -3,7 +3,8 @@ using System.Collections;
 
 public class GroupCard : EstateCard {
 	
-
+	public  delegate void GroupCardAction(object sender, GroupCardEventArgs gae);
+	public static event GroupCardAction DrowDicesRequest;
 	// Use this for initialization
 	void Start () 
 	{
@@ -14,33 +15,39 @@ public class GroupCard : EstateCard {
 
 	void UpdatePrice(Object sender, EstateCardEventArgs ese)
 	{
-		int OwnerHas = 0;
-		Debug.Log("ahaha a ya podpisalsya !\n" + gameObject.name);
-
+		switch(CardInfo.Group)
+		{
+		case Group.Journey:{CurrentPrice = CardInfo.SitePrice * GetCardCount(); }break;
+		case Group.Science:{
+			DrowDicesRequest(this, new GroupCardEventArgs()); 
 		
-			if(Owner != null)
+		}break;
+		}
+
+	}
+
+	int GetCardCount()
+	{
+		int OwnerHas = 0;
+		if(Owner != null)
+		{
+			foreach (GameObject Card in Owner.Cards) 
 			{
-				foreach (GameObject Card in Owner.Cards) 
+				if(Card.GetComponent<EstateCard>().CardInfo.Group == CardInfo.Group)
 				{
-					if(Card.GetComponent<EstateCard>().CardInfo.Group == CardInfo.Group)
-					{
-						OwnerHas ++;
-					}
+					OwnerHas ++;
 				}
-				CurrentPrice = SiteRentPrice * OwnerHas;
 			}
-			else CurrentPrice = SiteRentPrice;
+
+		}
+		return OwnerHas;
 	}
 	#region Initialize
-	public void Initialize(string Name)
+	public override void Initialize(CardInfo ci, Sprite sp)
 	{
-		gameObject.name = name;
-		CardInfo = GameObject.Find("DataReader").GetComponent<DataReader>().GetCardInfo(gameObject.name);
-		PurchasePrice = CardInfo.PurchasePrice;
-		SiteRentPrice = CardInfo.SitePrice;
-		CurrentPrice = SiteRentPrice;
-		Title = CardInfo.Title;
-		Position = new Position(CardInfo.Position);
+		base.Initialize(ci, sp);
+		Owner = null;
+		CurrentPrice = CardInfo.PurchasePrice;
 
 	}
 	#endregion
@@ -48,7 +55,9 @@ public class GroupCard : EstateCard {
 #region Group Card Event Args
 public class GroupCardEventArgs : System.EventArgs 
 {
-	public GroupCardEventArgs()
+
+					
+	public GroupCardEventArgs()				
 	{
 
 	}

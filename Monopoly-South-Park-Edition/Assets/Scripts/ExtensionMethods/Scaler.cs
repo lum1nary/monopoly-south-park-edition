@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using System;
 
 [RequireComponent(typeof(Renderer))]
 public static class Scaler {
@@ -13,5 +13,17 @@ public static class Scaler {
 		float factor =  tHeight / (obj.GetComponent<SpriteRenderer>().bounds.size.y);
 		obj.transform.localScale *=factor;
 		//Debug.Log((obj.GetComponent<SpriteRenderer>().bounds.size.y).ToString());
+	}
+
+	public static void ScaleToCameraAspectRatio(this GameObject obj)
+	{
+		float scaleFactor =(float)Math.Round(((Camera.main.orthographicSize*2) * Camera.main.aspect) / obj.GetComponent<SpriteRenderer>().bounds.size.x,2);
+		obj.transform.localScale = new Vector3(
+			obj.transform.localScale.x * scaleFactor,
+			obj.transform.localScale.y * scaleFactor,
+			obj.transform.localScale.z * scaleFactor
+			);
+
+
 	}
 }

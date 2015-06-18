@@ -6,66 +6,71 @@ public class Position : UnityEngine.Object
 	public delegate void PositionChangedAction(Object sender, PositionEventArgs pe);
 	public event PositionChangedAction PositionAdded;
 	public event PositionChangedAction PositionSubtracted;
-	int _value;
-	public int Value {
-		get
-		{
-			return _value;
-		}
-	}
+	public int Value { get;protected set;}
 	public Position(int value)
 	{
-		_value = value;
+		Value = value;
 
 	}
 	#region Add
 	public void Add(int count)
 	{
-		int old = _value;
-		if((_value + count) > 40)
+		int old = Value;
+		if((Value + count) > 40)
 		{
-			_value +=count -40;
+			Value +=count -40;
 		}
-		else _value +=count;
-		PositionAdded(this, new PositionEventArgs(old,_value));
+		else Value +=count;
+		if(PositionAdded != null)
+			PositionAdded(this, new PositionEventArgs(old,Value));
 	}
 	#endregion
 	#region Subtract
 	public void Subtract(int count)
 	{
-		int old = _value;
-		if((_value - count) < 1)
+		int old = Value;
+		if((Value - count) < 1)
 		{
-			_value +=40 - count;
+			Value +=40 - count;
 		}
-		else _value -=count;
-		PositionSubtracted(this, new PositionEventArgs(old,_value));
+		else Value -=count;
+		if(PositionSubtracted != null)
+			PositionSubtracted(this, new PositionEventArgs(old,Value));
 	}
 	#endregion
 	#region GetWorldPoint
- 	public Vector3 GetWorldPoint(Vector3 backSize)
+	public Vector3 GetWorldPoint(Vector3 backSize)
+	{
+		return GetWorldPoint(backSize,0);
+	}
+
+ 	public Vector3 GetWorldPoint(Vector3 backSize, float z_axis)
 	{
 		float border  =  backSize.y * 0.02f;
 		float SinglePart = (backSize.y - (border * 2)) / 24;
-		if(_value % 10 == 1)
+		if(Value % 10 == 1)
 		{
-			switch(_value)
+			switch(Value)
 			{
 			case 1: { return new Vector3(
 					(backSize.y - (border + SinglePart * 1.5f)),
-					(border + SinglePart * 1.5f)
+					(border + SinglePart * 1.5f),
+					z_axis
 					);}
 			case 11:{ return new Vector3(
 					(border + (SinglePart * 1.5f)),
-					(border + (SinglePart * 1.5f))
+					(border + (SinglePart * 1.5f)),
+					z_axis
 					);}
 			case 21:{ return new Vector3(
 					border + (SinglePart * 1.5f),
-					backSize.y - (border + SinglePart* 1.5f)
+					backSize.y - (border + SinglePart* 1.5f),
+					z_axis
 					);}
 			case 31:{ return new Vector3(
 					backSize.y - (border + (SinglePart * 1.5f)),
-					backSize.y - (border + (SinglePart * 1.5f))
+					backSize.y - (border + (SinglePart * 1.5f)),
+					z_axis
 					);}
 			default: {return Vector3.zero;}
 			}
@@ -73,35 +78,39 @@ public class Position : UnityEngine.Object
 		}
 		else
 		{
-			int side = (int)((_value-1) / 10);
+			int side = (int)((Value-1) / 10);
 			switch(side)
 			{
 			case 0:
 			{
 				return new Vector3(
-					backSize.y - (border + (SinglePart * ( 3 + (((--_value) % 10) * 2)  - 1)   )),
-					border + (SinglePart * 1.5f)
-					);
+					backSize.y - (border + (SinglePart * ( 3 + (((Value-1) % 10) * 2)  - 1)   )),
+					border + (SinglePart * 1.5f),
+					z_axis
+					 );
 			}
 			case 1:
 			{
 				return new Vector3(
 					border + (SinglePart * 1.5f),
-					border + (SinglePart * (3 + (((--_value) % 10) * 2) - 1 ))
+					border + (SinglePart * (3 + (((Value-1) % 10) * 2) - 1 )),
+					z_axis
 					);
 			}
 			case 2:
 			{
 				return new Vector3(
-					/*backSize.y -*/ (border + (SinglePart * ( 3 + (((--_value) % 10) * 2)  - 1)   )),
-					backSize.y - (border + (SinglePart * 1.5f))
+					/*backSize.y -*/ (border + (SinglePart * ( 3 + (((Value-1) % 10) * 2)  - 1)   )),
+					backSize.y - (border + (SinglePart * 1.5f)),
+					z_axis
 					);
 			}
 			case 3:
 			{
 				return new Vector3(
 					backSize.y - (border + (SinglePart * 1.5f)),
-					backSize.y - (border + (SinglePart * (3 + (((--_value) % 10) * 2 ) - 1)  ))
+					backSize.y - (border + (SinglePart * (3 + (((Value-1) % 10) * 2 ) - 1)  )),
+					z_axis
 					);
 			}
 			default:{ return Vector3.zero;}
