@@ -21,6 +21,11 @@ public class BaseCard : MonoBehaviour
 	{
 
 	}
+	public virtual void Initialize(CardInfo ci)
+	{
+		Initialize(ci,spritePicture.sprite);
+	}
+
 	public virtual void Initialize(CardInfo ci, Sprite sp)
 	{
 		CardInfo = ci;

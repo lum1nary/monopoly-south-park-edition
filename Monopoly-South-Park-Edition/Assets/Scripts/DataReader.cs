@@ -38,10 +38,21 @@ public class DataReader : MonoBehaviour {
 			}
 
 		}
-		return Group.Activity;
+		return Group.GO;
 	}
 	#endregion
 	#region GetCardInfo
+
+	/// <summary>
+	///  IN Case of Estate and upper Card 
+	/// 0 = name; 1 = PurchasePrice, 2 = RentPrice, 3 = Price with 1 home
+	/// 4 = Price with 2 home, 5 = 3homes, 6 = 4 homes, 7 = Hotel, 8 group, 
+	/// 9 position on board 
+	/// IN case of ACTIVITY CARD
+	/// 0 = name, 1 = 
+	/// </summary>
+	/// <returns>The card info.</returns>
+	/// <param name="Name">Name.</param>
 	public CardInfo GetCardInfo(string Name)
 	{
 		for (int i = 0; i < Data.Length; i++) 

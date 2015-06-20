@@ -5,15 +5,27 @@ using System.Collections.Generic;
 public class Game : MonoBehaviour 
 
 {
+	// Examples 
+
+	public GameObject             SetCardExample;
+	public GameObject         JourneyCardExample;
+	public GameObject         ScienceCardExample;
+	public GameObject              GoCardExample;
+	public GameObject       IncomeTaxCardExample;
+	public GameObject       LuxuryTaxCardExample;
+	public GameObject  ComminutyChestCardExample;
+	public GameObject          ChanceCardExample;
+	public GameObject            JailCardExample;
+	public GameObject              PlayerExample;
+	public GameObject                DiceExample;
+
+	/*=========================================*/
+
+	public GameObject Background;
 	public LinkedList <Player> Players {get; set;}
 	public List<GameObject> Cards {get;set;}
 	public GameObject MidleGround {get;set;}
 	public DataReader DataReader {get;set;}
-	public GameObject SetCardExample;
-	public GameObject GroupCardExample;
-	public GameObject Background;
-	public GameObject PlayerExample;
-	public GameObject DiceExample;
 	public Vector3 GameBoardSize {get;set;}
 	int playerMovesPerTurn;
 	int NumbersToMove;
@@ -39,7 +51,7 @@ public class Game : MonoBehaviour
 		GetPlayers();
 		CreateCards();
 		ActivePlayer = Players.First.Value;
-		ActivePlayer.Move(12,false);
+		ActivePlayer.Move(12,true);
 	}
 
 	public void DrowDices()
@@ -112,7 +124,37 @@ public class Game : MonoBehaviour
 		{
 			switch(DataReader.GetGroupByName(Names[i]))
 			{
-			case Group.Activity:{}break;
+			case Group.GO:
+			{
+				Cards.Add(GameObject.Instantiate(GoCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<GoCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+			}break;
+			case Group.Chance:
+			{
+				Cards.Add(GameObject.Instantiate(ChanceCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<ChanceCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+
+			}break;
+			case Group.CommunityChest:
+			{
+				Cards.Add(GameObject.Instantiate(ComminutyChestCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<CommunityChestCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+			}break;
+			case Group.IncomeTax:{}break;
+			case Group.LuxuryTax:{}break;
+			case Group.Jail:{}break;
 			case Group.Journey: 
 			{
 
@@ -122,7 +164,8 @@ public class Game : MonoBehaviour
 
 			}break;
 
-			default:{ Cards.Add(GameObject.Instantiate(SetCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject); 
+			default:{ 
+				Cards.Add(GameObject.Instantiate(SetCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject); 
 				Cards[i].GetComponent<SetCard>().Initialize(DataReader.GetCardInfo(Names[i]), DataReader.GetSpriteByPosition(DataReader.GetCardInfo(Names[i]).Position));
 				Cards[i].transform.SetParent(pCards.transform);
 				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
@@ -150,7 +193,7 @@ public class Game : MonoBehaviour
 	}
 	#endregion
 	#region Waiting Function
-	void WaitFor(float Secounds) { StartCoroutine(WaitForTime(Secounds));}
+ 	void WaitFor(float Secounds) { StartCoroutine(WaitForTime(Secounds));}
 	IEnumerator WaitForTime(float time) { yield return new WaitForSeconds(time);}
 	#endregion
 	#region GetPlayers
@@ -168,13 +211,12 @@ public class Game : MonoBehaviour
 	#endregion
 
 }
-
 #region Enum - Set Card Status
 public enum SetCardStatus{Normal,Doubled, With_1_House, With_2_Houses, With_3_Houses, With_4_Houses,With_Hotel};
 #endregion
 #region Enum - Color Groups
 public enum Group {
-	Activity = 0, 
+	GO = 0, 
 	Purple = 1, 
 	LightBlue = 2, 
 	Pink = 3,
@@ -184,6 +226,11 @@ public enum Group {
 	Green = 7,
 	Blue  = 8,
 	Journey = 9,
-	Science = 10
+	Science = 10,
+	CommunityChest = 11,
+	Chance = 12,
+	Jail = 13,
+	IncomeTax =14,
+	LuxuryTax =15
 };
 #endregion
