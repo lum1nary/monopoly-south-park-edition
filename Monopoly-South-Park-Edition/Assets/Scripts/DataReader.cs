@@ -20,7 +20,7 @@ public class DataReader : MonoBehaviour {
 
 	public Sprite GetSpriteByPosition(int pos)
 	{
-		for (int i = 0; i < CardSprites.Length; i++) 
+		for (int i = 0; i <= CardSprites.Length; i++) 
 		{
 			if(int.Parse(CardSprites[i].name) == pos)
 				return CardSprites[i];
@@ -30,7 +30,7 @@ public class DataReader : MonoBehaviour {
 	#region Get Group By Name
 	public Group GetGroupByName(string Name)
 	{
-		for (int i = 0; i < Data.Length; i++) 
+		for (int i = 0; i <= Data.Length; i++) 
 		{
 			if(Data[i].Contains(Name))
 			{

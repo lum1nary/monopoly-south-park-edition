@@ -6,42 +6,60 @@ using System;
 public class Player : MonoBehaviour
 {
 	public delegate void PlayerAction(object sender, PlayerEventArgs pe);
-	public event PlayerAction OnMoveStart;
-	public event PlayerAction OnMoveEnd;
-	public event PlayerAction OnMoving;
+	public event PlayerAction MoveStart;
+	public event PlayerAction MoveEnd;
+	public event PlayerAction isMoving;
+	public event PlayerAction BuyProperty;
+
 
 
 
 	public int speed;
 	//=============================
-	Position  Position    {get; set;}
-	int       Money       {get; set;}
-	string    Name        {get; set;}
-	SpriteRenderer Avatar {get; set;}
+	public Position  Position    {get; protected set;}
+	public int       Money       {get; protected set;}
+	public string    Name        {get; protected set;}
+	public SpriteRenderer Avatar {get; protected set;}
 	//=============================
 	public List<GameObject> Cards { get; set;}
+
 
 	void Awake()
 	{
 		Cards = new List<GameObject> ();
 		Position = new Position(1);
 		Avatar = transform.FindChild("Char_sprite").gameObject.GetComponent<SpriteRenderer>();
-
+		Name =name;
+		Money = 0;
 
 	}
+
 	void Start()
 	{
-		transform.position = Position.GetWorldPoint(GameObject.Find("Game").GetComponent<Game>().GameBoardSize);
+
+		if(Application.loadedLevel == 1)
+			transform.position = Position.GetWorldPoint(GameObject.Find("Game").GetComponent<Game>().GameBoardSize);
+//		GameObject.Find("Game").GetComponent<Game>().PlayerNext += (object sender, GameEventArgs ge) => 
+//		{
+//			for (int i = 0; i < GameObject.FindGameObjectsWithTag("Card").Length; i++) {
+//				Cards.Add(GameObject.FindGameObjectsWithTag("Card")[i]);
+//				print(GameObject.FindGameObjectsWithTag("Card")[i].name);
+//			}
+//		};
+
+			
+
 	}
 	public void Initialize(int money, string name, Sprite picture)
 	{
 		Money = money;
 		Name = name;
 		Avatar.sprite = picture;
+
 	}
 
 
-	bool TryPay(int moneyToPay)
+	public bool TryPay(int moneyToPay)
 	{
 		if((Money - moneyToPay) < 0)
 		{
@@ -53,10 +71,15 @@ public class Player : MonoBehaviour
 		}
 	}
 	#region Buy
-	public void Buy(ref GameObject NewCard)
+	public void Buy( GameObject NewCard)
 	{
 		NewCard.GetComponent<EstateCard>().Owner = this;
+		Money -=NewCard.GetComponent<BaseCard>().CardInfo.PurchasePrice;
 		Cards.Add(NewCard);
+		if(BuyProperty != null)
+		{
+			BuyProperty(this, new PlayerEventArgs(Position));
+		}
 		Debug.Log("Card:" + NewCard.GetComponent<EstateCard>().name + "Has Been Byed by:" + this.Name);
 	}
 	#endregion
@@ -71,8 +94,8 @@ public class Player : MonoBehaviour
 	IEnumerator Moving (int target, bool moving_forward)
 	{
 		Vector3 GameBoardSize  = GameObject.Find("Game").GetComponent<Game>().GameBoardSize;
-		if(OnMoveStart != null)
-			OnMoveStart(this,new PlayerEventArgs(Position));
+		if(MoveStart != null)
+			MoveStart(this,new PlayerEventArgs(Position));
 		
 		float step = speed * Time.deltaTime;
 		int count  = target;
@@ -86,17 +109,20 @@ public class Player : MonoBehaviour
 			{
 				transform.position = Vector3.MoveTowards(transform.position, Position.GetWorldPoint(GameBoardSize), step);
 				
-				if(OnMoving != null)
-					OnMoving(this, new PlayerEventArgs(Position));
+				if(isMoving != null)
+					isMoving(this, new PlayerEventArgs(Position));
 				yield return null;
 			}
 			count --;
 		}
-		if(OnMoveEnd != null)
-			OnMoveEnd(this, new PlayerEventArgs(Position));
+		if(MoveEnd != null)
+			MoveEnd(this, new PlayerEventArgs(Position));
 	}
 	#endregion
+
+
 }
+
 
 
 public class PlayerEventArgs : System.EventArgs

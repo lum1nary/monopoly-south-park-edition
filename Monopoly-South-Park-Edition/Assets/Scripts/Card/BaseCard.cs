@@ -3,6 +3,9 @@ using System.Collections;
 
 public class BaseCard : MonoBehaviour
 {	
+	public delegate void BaseCardAction(object sender, BaseCardEventArgs be);
+	public event BaseCardAction OnClick;
+
 	protected GameObject sprite {get;set;}
 	protected BoxCollider2D CardCollider;
 	protected SpriteRenderer spritePicture {get;set;}
@@ -100,6 +103,14 @@ public class BaseCard : MonoBehaviour
 		}
 	}
 	#endregion
+	void OnMouseDown()
+	{
+		print("I Am "+ gameObject.name +"And you clicked on me");
+		if(OnClick != null)
+		{
+			OnClick(this, new BaseCardEventArgs(CardInfo, spritePicture.sprite));
+		}
+	}
 	void OnMouseEnter()
 	{
 		spritePicture.color =Color.white;
@@ -109,5 +120,18 @@ public class BaseCard : MonoBehaviour
 		spritePicture.color = new Color32(231,231,231,255);
 	}
 
+
+}
+
+
+public class BaseCardEventArgs :System.EventArgs
+{
+	public CardInfo info;
+	public Sprite  sprite;
+	public BaseCardEventArgs(CardInfo i, Sprite s)
+	{
+		info = i;
+		sprite = s;
+	}
 
 }

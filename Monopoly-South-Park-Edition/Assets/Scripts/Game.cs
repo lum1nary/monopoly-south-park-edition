@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Game : MonoBehaviour 
-
 {
 	// Examples 
 
@@ -18,7 +17,7 @@ public class Game : MonoBehaviour
 	public GameObject            JailCardExample;
 	public GameObject              PlayerExample;
 	public GameObject                DiceExample;
-
+	public GameObject         FreeParkingExmaple;
 	/*=========================================*/
 
 	public GameObject Background;
@@ -29,15 +28,37 @@ public class Game : MonoBehaviour
 	public Vector3 GameBoardSize {get;set;}
 	int playerMovesPerTurn;
 	int NumbersToMove;
-	bool PlayerDrowDicesAgain;
+	public bool PlayerDrowDicesAgain;
+	int needToGoinJail;
 	Player ActivePlayer;
 
 	GameObject [] Dices;
 	const int DicesCount = 2;
+
+	public delegate void PlayerAction(object sender, GameEventArgs ge);
+
+
+	public event PlayerAction PlayerNext;
+	public event PlayerAction onWin;
+
+
 	void Awake()
 	{
 		Physics.gravity = new Vector3(0,0,9.81f);
 		GameBoardSize = GameObject.Find("GameBoard").GetComponent<SpriteRenderer>().bounds.size;
+		NumbersToMove = 0;
+	
+	}
+
+	public void DetectWinner()
+	{
+		if(Players.Count == 1)
+		{
+			if(onWin != null)
+			{
+				onWin(this, new GameEventArgs(Players.First.Value));
+			}
+		}
 	}
 
 	// Use this for initialization
@@ -51,7 +72,15 @@ public class Game : MonoBehaviour
 		GetPlayers();
 		CreateCards();
 		ActivePlayer = Players.First.Value;
-		ActivePlayer.Move(12,true);
+		if(PlayerNext != null)
+		{
+			PlayerNext(this, new GameEventArgs(ActivePlayer));
+		}
+	}
+
+	public void NextTurn()
+	{
+		ActivePlayer = NextPlayer();
 	}
 
 	public void DrowDices()
@@ -77,7 +106,7 @@ public class Game : MonoBehaviour
 		print(dae.DiceNumber.ToString());
 		bool allDropped = true;
 		((GameObject)sender).GetComponent<Dice>().Dropped -=DiceDroppetEventHandler;
-
+		NumbersToMove +=dae.DiceNumber;
 		foreach (var item in Dices) 
 		{
 			if(item.GetComponent<Dice>().hasSubscribers())
@@ -90,7 +119,8 @@ public class Game : MonoBehaviour
 			PlayerDrowDicesAgain = CheckIfDicesSame();
 			if(ActivePlayer != null)
 			{
-
+				ActivePlayer.Move(NumbersToMove,true);
+				NumbersToMove = 0;
 			}
 			foreach (var item in Dices) 
 			{
@@ -103,11 +133,20 @@ public class Game : MonoBehaviour
 	}
 	
 		
-	Player NextPlayer(Player Current)
+	Player NextPlayer()
 	{
-		if(Players.Find(Current).Next == null)
+		if(Players.Find(ActivePlayer).Next == null)
+		{
+			if(PlayerNext != null)
+				PlayerNext(this, new GameEventArgs(ActivePlayer));
 			return Players.First.Value;
-		else return Players.Find(Current).Next.Value;
+		}
+		else 
+		{
+			if(PlayerNext != null)
+			PlayerNext(this, new GameEventArgs(ActivePlayer));
+			return Players.Find(ActivePlayer).Next.Value;
+		}
 	}
 	public void ExitFromGame()
 	{
@@ -124,6 +163,7 @@ public class Game : MonoBehaviour
 		{
 			switch(DataReader.GetGroupByName(Names[i]))
 			{
+				#region Group Go
 			case Group.GO:
 			{
 				Cards.Add(GameObject.Instantiate(GoCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
@@ -133,6 +173,18 @@ public class Game : MonoBehaviour
 				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
 				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
 			}break;
+				#endregion
+				#region FreeParking
+			case Group.FreeParking: {
+				Cards.Add(GameObject.Instantiate(FreeParkingExmaple, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<BaseCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+			}break;
+				#endregion
+				#region Chance
 			case Group.Chance:
 			{
 				Cards.Add(GameObject.Instantiate(ChanceCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
@@ -141,9 +193,10 @@ public class Game : MonoBehaviour
 				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
 				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
 				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
-
 			}break;
-			case Group.CommunityChest:
+				#endregion
+				#region CommunityChest
+			case Group.CommunityChest: 
 			{
 				Cards.Add(GameObject.Instantiate(ComminutyChestCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
 				Cards[i].GetComponent<CommunityChestCard>().Initialize(DataReader.GetCardInfo(Names[i]));
@@ -152,18 +205,62 @@ public class Game : MonoBehaviour
 				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
 				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
 			}break;
-			case Group.IncomeTax:{}break;
-			case Group.LuxuryTax:{}break;
-			case Group.Jail:{}break;
+				#endregion
+				#region IncomeTax
+			case Group.IncomeTax:{
+				Cards.Add(GameObject.Instantiate(IncomeTaxCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<IncomeTaxCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+			}break;
+				#endregion
+			#region LuxuryTax
+			case Group.LuxuryTax:{
+				Cards.Add(GameObject.Instantiate(LuxuryTaxCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<LuxuryTacCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+			}break;
+				#endregion
+			#region Jail
+			case Group.Jail:
+			{
+				Cards.Add(GameObject.Instantiate(JailCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<JailCard>().Initialize(DataReader.GetCardInfo(Names[i]));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
+
+			}break;
+				#endregion
+			#region Journey
 			case Group.Journey: 
 			{
-
+				Cards.Add(GameObject.Instantiate(JourneyCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<GroupCard>().Initialize(DataReader.GetCardInfo(Names[i]), DataReader.GetSpriteByPosition(DataReader.GetCardInfo(Names[i]).Position));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
 			}break;
+				#endregion
+				#region Science
 			case Group.Science:
 			{
-
+				Cards.Add(GameObject.Instantiate(ScienceCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject);
+				Cards[i].GetComponent<ScienceCard>().Initialize(DataReader.GetCardInfo(Names[i]), DataReader.GetSpriteByPosition(DataReader.GetCardInfo(Names[i]).Position));
+				Cards[i].transform.SetParent(pCards.transform);
+				Cards[i].transform.FindChild("Sprite").gameObject.ScaleTo(0.12f);
+				Cards[i].transform.position = Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
+				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<BaseCard>().CardInfo.Position -1)/10) *90);
 			}break;
-
+			#endregion
+			#region DeFault
 			default:{ 
 				Cards.Add(GameObject.Instantiate(SetCardExample, new Vector3(12.8f,10.24f), Quaternion.identity) as GameObject); 
 				Cards[i].GetComponent<SetCard>().Initialize(DataReader.GetCardInfo(Names[i]), DataReader.GetSpriteByPosition(DataReader.GetCardInfo(Names[i]).Position));
@@ -172,11 +269,9 @@ public class Game : MonoBehaviour
 				Cards[i].transform.position  =  Cards[i].GetComponent<BaseCard>().GetWorldPoint(GameBoardSize);
 				Cards[i].transform.rotation = Quaternion.Euler(0,0, 360 - (int)((Cards[i].GetComponent<SetCard>().CardInfo.Position - 1) / 10) * 90);
 			}break;
+			#endregion
 			}
-
-
 		}
-
 	}
 	#region Check If Dices are Same
 	bool CheckIfDicesSame()
@@ -204,13 +299,36 @@ public class Game : MonoBehaviour
 		{
 						
 			Players.AddLast(players[i].GetComponent<Player>());
-						
+			players[i].transform.SetParent(GameObject.Find("2-Foreground").transform);
+			players[i].transform.position = players[i].GetComponent<Player>().Position.GetWorldPoint(GameBoardSize);
 		}
 		Debug.Log("Players Finded:" + players.Length.ToString());
 	}
 	#endregion
+	public GameObject GetCardByPosition(int pos)
+	{
+		foreach (GameObject item in Cards) {
+			if(item.GetComponent<BaseCard>().CardInfo.Position == pos)
+			{
+				return item;
+			}
+		}
+		return null;
+	}
 
 }
+
+public class GameEventArgs : System.EventArgs
+{
+	public Player ActivePlayer;
+	public GameEventArgs(Player Active)
+	{
+		ActivePlayer = Active;
+	}
+
+}
+
+
 #region Enum - Set Card Status
 public enum SetCardStatus{Normal,Doubled, With_1_House, With_2_Houses, With_3_Houses, With_4_Houses,With_Hotel};
 #endregion
@@ -231,6 +349,7 @@ public enum Group {
 	Chance = 12,
 	Jail = 13,
 	IncomeTax =14,
-	LuxuryTax =15
+	LuxuryTax =15,
+	FreeParking = 16
 };
 #endregion
